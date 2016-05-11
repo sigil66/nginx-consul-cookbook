@@ -13,7 +13,7 @@ package 'nginx-extras' do
   options '-o Dpkg::Options::="--force-confold"'
 end
 
-dir '/etc/nginx/lua/consul' do
+directory '/etc/nginx/lua/consul' do
   mode 0755
   recursive true
 end
