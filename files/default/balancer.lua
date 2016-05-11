@@ -26,17 +26,25 @@ local function refresh(premature)
   elseif res.body then
     local services = json.decode(res.body)
 
-    for service, tags in pairs(services) do
-      local sub, err = hc:request_uri("http://127.0.0.1:8500/v1/catalog/service/" .. service .. "?tag=service", {
-        method = "GET"
-      })
+    -- catch json errors
+    local suc, services = pcall(function()
+      return json.decode(res.body)
+    end)
 
-      if sub.body then
-        _M.set(service, json.decode(sub.body))
+    if suc then
+      for service, tags in pairs(services) do
+        local sub, err = hc:request_uri("http://127.0.0.1:8500/v1/catalog/service/" .. service .. "?tag=service", {
+          method = "GET"
+        })
+
+        if sub.body then
+          _M.set(service, json.decode(sub.body))
+        end
       end
+      ngx.log(ngx.ERR, "consul: refreshed upstreams")
+    else
+      ngx.log(ngx.ERR, "consul: Failed to decode Consul response")
     end
-
-    ngx.log(ngx.ERR, "consul: refreshed upstreams")
   end
   
   local ok, err = ngx.timer.at(refresh_interval, refresh)
