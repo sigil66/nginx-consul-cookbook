@@ -45,7 +45,7 @@ server {
 }
 
 # Simple upstream configuration, utilizes module state initialized in worker to implement
-# basic round robin. Can be merged with main lua implementation, block his here for illustration.
+# basic round robin
 upstream consul {
   server 127.0.0.1:666;
 
