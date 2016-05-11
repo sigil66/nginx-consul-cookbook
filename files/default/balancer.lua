@@ -5,6 +5,7 @@ local _M = {}
 
 local json = require "cjson"
 local http = require "resty.http"
+local balancer = require "ngx.balancer"
 
 local upstreams = {}
 local state = {}
