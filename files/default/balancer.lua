@@ -48,8 +48,8 @@ end
 -- public
 
 -- start consul refresh
-function _M:start(interval)
-  self.refresh_interval = interval
+function _M.start(interval)
+  refresh_interval = interval
 
   local ok, err = ngx.timer.at(0, refresh)
   if not ok then
