@@ -18,7 +18,7 @@ lua_package_path '/usr/lib/openresty/lua-resty-http/lib/?.lua;/usr/lib/openresty
 # Initalizes Nginx worker, starts 30s consul refresh via ngx.timer
 init_worker_by_lua_block {
   local consul_balancer = require "consul.balancer"
-  consul_balancer:start(30)
+  consul_balancer:start(15)
 }
 
 server {
