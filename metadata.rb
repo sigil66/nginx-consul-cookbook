@@ -4,6 +4,6 @@ maintainer_email 'ops@sigil66.com'
 license          'Apache 2.0'
 description      'Installs/Configures nginx-consul'
 long_description 'Installs/Configures nginx-consul'
-version          '0.1.6'
+version          '0.1.7'
 
 depends          'sigil66'

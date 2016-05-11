@@ -12,32 +12,33 @@ local refresh_interval = 30
 
 -- private
 local function refresh(premature)
-  if not premature then
-    local hc = http:new()
-
-    local res, err = hc:request_uri "http://127.0.0.1:8500/v1/catalog/services", {
-      method = "GET"
-    }
-
-    if res == nil then
-      ngx.log(ngx.ERR, "consul: FAILED to refresh upstreams")
-    elseif res.body then
-      local services = json.decode(res.body)
-
-      for service, tags in pairs(services) do
-        local sub, err = hc:request_uri("http://127.0.0.1:8500/v1/catalog/service/" .. service .. "?tag=service", {
-          method = "GET"
-        })
-
-        if sub.body then
-          _M.set(service, json.decode(sub.body))
-        end
-      end
-
-      ngx.log(ngx.ERR, "consul: refreshed upstreams")
-    end
+  if premature then
+    return
   end
 
+  local hc = http:new()
+  local res, err = hc:request_uri "http://127.0.0.1:8500/v1/catalog/services", {
+    method = "GET"
+  }
+
+  if res == nil then
+    ngx.log(ngx.ERR, "consul: FAILED to refresh upstreams")
+  elseif res.body then
+    local services = json.decode(res.body)
+
+    for service, tags in pairs(services) do
+      local sub, err = hc:request_uri("http://127.0.0.1:8500/v1/catalog/service/" .. service .. "?tag=service", {
+        method = "GET"
+      })
+
+      if sub.body then
+        _M.set(service, json.decode(sub.body))
+      end
+    end
+
+    ngx.log(ngx.ERR, "consul: refreshed upstreams")
+  end
+  
   local ok, err = ngx.timer.at(refresh_interval, refresh)
   if not ok then
     ngx.log(ngx.ERR, "failed to create the timer: ", err)
