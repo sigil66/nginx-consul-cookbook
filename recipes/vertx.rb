@@ -6,4 +6,5 @@
 #
 #
 
+package 'oracle-java8-jdk'
 package 'vertx'
