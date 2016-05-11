@@ -1,0 +1,71 @@
+proxy_http_version 1.1;
+proxy_set_header Connection "";
+proxy_set_header Host $host;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+# proxy_set_header X-Forwarded-Proto https;
+proxy_next_upstream error timeout http_502 http_504;
+
+client_max_body_size 5m;
+
+root /var/www/html;
+error_page 503 /503.html;
+error_page 408 500 502 504 /500.html;
+
+# Defines the lua include path, openresty packages are included
+# as well as nginx lua folder
+lua_package_path '/usr/lib/openresty/lua-resty-http/lib/?.lua;/usr/lib/openresty/lua-resty-core/lib/?.lua;/etc/nginx/lua/?.lua;;';
+
+# Initalizes Nginx worker, starts 30s consul refresh via ngx.timer
+init_worker_by_lua_block {
+  local consul_balancer = require "consul.balancer"
+  consul_balancer:start(30)
+}
+
+server {
+  listen 80 default_server;
+  listen [::]:80 default_server;
+
+  server_name _;
+
+  location / {
+    index  index.html
+  }
+
+  # Define our endpoints here, hand responsible service to upstream
+  # via ngx.ctx
+  location /somefoo {
+    access_by_lua 'ngx.ctx.service = "foo"';
+    proxy_pass http://consul;
+  }
+
+  location /somebar {
+    access_by_lua 'ngx.ctx.service = "bar"';
+    proxy_pass http://consul;
+  }
+}
+
+# Simple upstream configuration, utilizes module state initialized in worker to implement
+# basic round robin
+upstream consul {
+  server 127.0.0.1:666;
+
+  balancer_by_lua_block {
+    local balancer = require "ngx.balancer"
+    local consul_balancer = require "consul.balancer"
+
+    local peer = consul_balancer.next(ngx.ctx.service)
+
+    if peer == nil then
+      ngx.log(ngx.ERR, "no peer found for service: ", ngx.ctx.service)
+      return ngx.exit(500)
+    end
+
+    local ok, err = balancer.set_current_peer(peer["address"], peer["port"])
+    if not ok then
+      ngx.log(ngx.ERR, "failed to set the current peer: ", err)
+      return ngx.exit(500)
+    end
+  }
+
+  keepalive 12;
+}
