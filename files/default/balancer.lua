@@ -24,8 +24,6 @@ local function refresh(premature)
   if res == nil then
     ngx.log(ngx.ERR, "consul: FAILED to refresh upstreams")
   elseif res.body then
-    local services = json.decode(res.body)
-
     -- catch json errors
     local suc, services = pcall(function()
       return json.decode(res.body)
