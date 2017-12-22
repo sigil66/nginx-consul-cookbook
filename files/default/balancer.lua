@@ -31,7 +31,7 @@ local function refresh(premature)
 
     if suc then
       for service, tags in pairs(services) do
-        local sub, err = hc:request_uri("http://127.0.0.1:8500/v1/catalog/service/" .. service .. "?tag=service", {
+        local sub, err = hc:request_uri("http://127.0.0.1:8500/v1/catalog/service/" .. service .. "?tag=service&stale=1", {
           method = "GET"
         })
 
